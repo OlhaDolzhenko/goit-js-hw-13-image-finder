@@ -16,14 +16,16 @@ function onSearch(e) {
   e.preventDefault();
   imagesApiService.query = e.currentTarget.elements.query.value;
 
-  if (imagesApiService.query === '') {
+  if (imagesApiService.query.trim() === '') {
+    clearResults();
+    loadMoreBtn.hide();
     return alert('❗Incorrect request❗');
+  } else {
+    loadMoreBtn.show();
+    imagesApiService.resetPage();
+    clearResults();
+    fetchImages();
   }
-
-  loadMoreBtn.show();
-  imagesApiService.resetPage();
-  clearResults();
-  fetchImages();
 }
 
 function fetchImages() {
@@ -44,16 +46,20 @@ function clearResults() {
 }
 
 function loadMore() {
-  fetchImages();
-  showResults(images);
-  window.scrollTo({
-    top: 0,
-    behavior: 'smooth',
-  });
+  loadMoreBtn.disable();
+  const counter = imagesApiService.page;
+  imagesApiService
+    .fetchImages()
+    .then(images => {
+      showResults(images);
+      loadMoreBtn.enable();
+    })
+    .then(() => windowScroll(counter));
 }
 
-/* function windowScroll() {
-  const scrollHeight = document.documentElement.clientHeight;
-  refs.gallery.insertAdjacentHTML('beforeend', cardTmpl(images.hits));
-  windowScrollTo(0, scrollHeight);
-} */
+function windowScroll(pages) {
+  const y =
+    (refs.gallery.clientHeight / pages) * (pages - 1) -
+    document.querySelector('.header').clientHeight;
+  window.scrollTo(0, y);
+}
